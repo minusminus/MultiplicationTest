@@ -1,0 +1,74 @@
+﻿@page "/multiplicationTest"
+
+@using TestTabliczkiMnozenia.Code
+
+<h3>Test tabliczki mnożenia</h3>
+
+@{
+    <table>
+        <tbody>
+        <tr hidden="@(!_uiVisibility.StartVisible)">
+            <td colspan="100%"><button @onclick="Start">Start</button></td>
+        </tr>
+        <tr hidden="@(!_uiVisibility.TestVisible)">
+            <td>[@_currentTestCaseIndex z @_testCases.Count]:</td>
+            <td>@_currentTestCase?.Number1</td>
+            <td>x</td>
+            <td>@_currentTestCase?.Number2</td>
+            <td>=</td>
+            <td><input @ref="_resultInput" @bind="_enteredResult" type="number"/></td>
+        </tr>
+        <tr hidden="@(!_uiVisibility.TestVisible)">
+            <td colspan="100%"><button @onclick="CheckEnteredResult">Sprawdź</button></td>
+        </tr>
+        <tr hidden="@(!_uiVisibility.ResultVisible)">
+            <td colspan="100%">Poprawnych odpowiedzi: @_correctResultsCount z @_testCases.Count</td>
+        </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    private const int TestsCount = 20;
+
+    private ElementReference _resultInput;
+    private UIElementsVisibility _uiVisibility = new();
+    private int _currentTestCaseIndex;
+    private TestItem _currentTestCase;
+    private string _enteredResult;
+    private int _correctResultsCount;
+
+    private readonly List<TestItem> _testCases = MultiplicationTestCasesGenerator.Generate(TestsCount, 2, 10);
+
+    private void Start()
+    {
+        _currentTestCaseIndex = 0;
+        _correctResultsCount = 0;
+        _enteredResult = null;
+        _uiVisibility.Set(false, true, false);
+        GetNextTestCase();
+    }
+
+    private void CheckEnteredResult()
+    {
+        if (int.TryParse(_enteredResult, out int value) && (value == _currentTestCase?.ExpectedValue))
+            _correctResultsCount++;
+        _enteredResult = null;
+        GetNextTestCase();
+    }
+
+    private void GetNextTestCase()
+    {
+        if (_currentTestCaseIndex < _testCases.Count)
+        {
+            _currentTestCase = _testCases[_currentTestCaseIndex];
+            _resultInput.FocusAsync();
+        }
+        else
+        {
+            _currentTestCase = null;
+            _uiVisibility.Set(true, false, true);
+        }
+        _currentTestCaseIndex++;
+    }
+}
